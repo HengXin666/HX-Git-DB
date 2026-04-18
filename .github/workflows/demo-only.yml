@@ -31,7 +31,7 @@ jobs:
           msg = 'only mode sync'
 
           with make_database(
-              'https://github.com/\${{ github.repository }}.git',
+              'https://github.com/${{ github.repository }}.git',
               'example-only',
               only=True,
           ) as db:
