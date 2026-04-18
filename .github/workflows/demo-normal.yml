@@ -1,0 +1,48 @@
+name: Demo Normal Mode
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install HX-Git-DB
+        run: pip install .
+
+      - name: Write data (normal mode)
+        run: |
+          python -c "
+          import datetime
+
+          from hx_git_db import make_database, MsgType
+
+          now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=8)))
+          ts = now.strftime('%Y-%m-%d %H:%M:%S')
+          msg = 'normal mode sync'
+
+          db = make_database(
+              'https://github.com/\${{ github.repository }}.git',
+              'examples-no-only',
+          )
+          db.pull()
+
+          with db.open('log.txt') as f:
+              content = f.read()
+              f.write(content + f'[{ts}] {msg}\n')
+
+          db.set_commit_msg(MsgType.FEAT, f'{ts} sync')
+          db.push()
+          db.cleanup()
+          "
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
